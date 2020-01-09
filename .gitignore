@@ -1,0 +1,5 @@
+# Project exclude paths
+Toolbox.iml
+.idea/
+target/
+.idea
