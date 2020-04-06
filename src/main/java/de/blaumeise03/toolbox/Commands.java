@@ -17,7 +17,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.permissions.Permission;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -30,9 +29,9 @@ public class Commands {
     public static void setUp() {
         CommandHandler handler = Main.getPlugin().getHandler();
 
-        new Command(handler, "repair", "Repariert das Item in deiner Hand", new Permission("toolbox.repair"), true) {
+        new Command(handler, "repair", "Repariert das Item in deiner Hand", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 Player p = (Player) sender;
                 if (p.getInventory().getItemInMainHand().getType() == Material.AIR) {
                     sender.sendMessage("§cDu musst ein Item in deine Hand halten!");
@@ -54,9 +53,9 @@ public class Commands {
             }
         };
 
-        new Command(handler, "speed", "Ändere deine Geschwindigkeit", new Permission("toolbox.speed"), true) {
+        new Command(handler, "speed", "Ändere deine Geschwindigkeit", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 Player p = (Player) sender;
                 if (args.length == 1) {
                     float speed;
@@ -82,18 +81,18 @@ public class Commands {
             }
         };
 
-        new Command(handler, "fly", "Schalte zwischen fliegen und laufen um.", new Permission("toolbox.fly"), true) {
+        new Command(handler, "fly", "Schalte zwischen fliegen und laufen um.", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 Player p = (Player) sender;
                 p.setAllowFlight(!p.getAllowFlight());
                 sender.sendMessage("§aDu " + (p.getAllowFlight() ? "§2kannst nun" : "kannst nun§c nicht") + "§a fliegen!");
             }
         };
 
-        new Command(handler, "broadcast", "Überträgt die Nachricht 1 zu 1 an alle Spieler. (Farbcodes werden unterstützt)", new Permission("toolbox.broadcast"), false) {
+        new Command(handler, "broadcast", "Überträgt die Nachricht 1 zu 1 an alle Spieler. (Farbcodes werden unterstützt)", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 StringBuilder builder = new StringBuilder();
                 for (String arg : args) {
                     builder.append(convertColor(arg)).append(" ");
@@ -103,9 +102,9 @@ public class Commands {
             }
         };
 
-        new Command(handler, "god", "Setzt oder entfernt dich vom GodMode.", new Permission("toolbox.godMode"), true) {
+        new Command(handler, "god", "Setzt oder entfernt dich vom GodMode.", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 Player p = (Player) sender;
                 Set<String> tags = p.getScoreboardTags();
                 boolean isGod = false;
@@ -128,9 +127,9 @@ public class Commands {
             }
         };
 
-        new Command(handler, "gm", "Ändere deinen Spielmodus.", new Permission("toolbox.gameMode"), true) {
+        new Command(handler, "gm", "Ändere deinen Spielmodus.", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 if (args.length == 1) {
                     Player p = (Player) sender;
                     GameMode mode;
@@ -172,18 +171,18 @@ public class Commands {
             }
         };
 
-        new Command(handler, "afk", "Setzt dich in den afk-modus", new Permission("toolbox.afk"), true) {
+        new Command(handler, "afk", "Setzt dich in den afk-modus", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 Main.setAfk((Player) sender, true);
                 sender.sendMessage("§aDu wurdest, wenn du es nicht bereits bist, in den afk-Modus gesetzt!");
                 //Main.lastAction.put((Player) sender,0L);
             }
         };
 
-        new Command(handler, "setWarp", "Setzt an deiner Position einen neuen Warp.", new Permission("toolbox.warpAdmin"), true) {
+        new Command(handler, "setWarp", "Setzt an deiner Position einen neuen Warp.", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 if (args.length != 1) {
                     sender.sendMessage("§cDu musst einen Namen angeben: §6/setWarp <WarpName>");
                     return;
@@ -195,9 +194,9 @@ public class Commands {
             }
         };
 
-        new Command(handler, "deleteWarp", "Löscht einen Warp", new Permission("toolbox.warpAdmin"), true) {
+        new Command(handler, "deleteWarp", "Löscht einen Warp", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 if (args.length == 1) {
                     boolean success = Warp.deleteWorldLocation(((Player) sender).getWorld(), args[0]);
                     if (!success) {
@@ -212,9 +211,9 @@ public class Commands {
             }
         };
 
-        new Command(handler, "listWarps", "Listet alle Warps auf.", new Permission("toolbox.warp"), false) {
+        new Command(handler, "listWarps", "Listet alle Warps auf.", true, true) {
             @Override
-            public void onCommand(String[] strings, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 StringBuilder builder = new StringBuilder(ChatColor.DARK_GREEN + "Alle Warps:");
                 for (Warp warp : Warp.warps) {
                     builder.append("\n§6 - ").append(warp.getName());
@@ -223,9 +222,9 @@ public class Commands {
             }
         };
 
-        new Command(handler, "warp", "Teleportiert dich zu dem angegebenen Warp", new Permission("toolbox.warp"), true) {
+        new Command(handler, "warp", "Teleportiert dich zu dem angegebenen Warp", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 Player p = (Player) sender;
                 if (args.length == 1) {
                     Location warp = Warp.getWarpPoint(args[0], p.getWorld());
@@ -244,17 +243,17 @@ public class Commands {
             }
         };
 
-        new Command(handler, "spawn", "Teleportiert dich zum Spawn", new Permission("toolbox.spawn"), true) {
+        new Command(handler, "spawn", "Teleportiert dich zum Spawn", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 Player p = (Player) sender;
                 p.performCommand("warp spawn");
             }
         };
 
-        new Command(handler, "spawnMob", "Spawnt ein oder mehrere Mobs", new Permission("toolbox.spawnMobs"), true) {
+        new Command(handler, "spawnMob", "Spawnt ein oder mehrere Mobs", true, true) {
             @Override
-            public void onCommand(String[] args, CommandSender sender) {
+            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 Player p = (Player) sender;
                 if (args.length == 0) {
                     p.sendMessage("§cZu wenige Argumente! Nutze §6/spawnMob <Mob> [Anzahl]");
