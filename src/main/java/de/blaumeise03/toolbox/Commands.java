@@ -6,7 +6,6 @@ package de.blaumeise03.toolbox;
 
 import de.blaumeise03.spigotUtils.Command;
 import de.blaumeise03.spigotUtils.CommandHandler;
-import de.blaumeise03.toolbox.menu.*;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -21,15 +20,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.permissions.Permission;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 public class Commands {
-    public static Menu warpMenu;
+    //public static Menu warpMenu;
 
     public static void setUp() {
         CommandHandler handler = Main.getPlugin().getHandler();
@@ -79,7 +75,7 @@ public class Commands {
                     }
 
                 } else {
-                    p.setFlySpeed((float) 0.2);
+                    p.setFlySpeed((float) 0.1);
                     p.setWalkSpeed((float) 0.2);
                     p.sendMessage("§aDeine Geschwindigkeit wurde resettet! Wenn du sie erhöhen willst füge die Geschwindigkeit an: /speed <speed>.");
                 }
@@ -181,6 +177,7 @@ public class Commands {
             public void onCommand(String[] args, CommandSender sender) {
                 Main.setAfk((Player) sender, true);
                 sender.sendMessage("§aDu wurdest, wenn du es nicht bereits bist, in den afk-Modus gesetzt!");
+                //Main.lastAction.put((Player) sender,0L);
             }
         };
 
@@ -191,23 +188,23 @@ public class Commands {
                     sender.sendMessage("§cDu musst einen Namen angeben: §6/setWarp <WarpName>");
                     return;
                 }
-                boolean success = Main.addWarp(args[0], ((Player) sender).getLocation());
+                boolean success = Warp.addWarp(((Player) sender).getLocation(), args[0]);
                 sender.sendMessage((success ? "§aDer Warp wurde erstellt!" : "§cDer Warp existiert bereits!"));
                 if (success)
                     Main.getPlugin().getLogger().info("Warp " + args[0] + " was created by " + sender.getName() + "!");
             }
         };
 
-        new Command(handler, "deleteWarp", "Löscht einen Warp", new Permission("toolbox.warpAdmin"), false) {
+        new Command(handler, "deleteWarp", "Löscht einen Warp", new Permission("toolbox.warpAdmin"), true) {
             @Override
             public void onCommand(String[] args, CommandSender sender) {
                 if (args.length == 1) {
-                    boolean success = Main.removeWarp(args[0]);
+                    boolean success = Warp.deleteWorldLocation(((Player) sender).getWorld(), args[0]);
                     if (!success) {
                         sender.sendMessage(ChatColor.RED + "Dieser Warp existiert nicht!");
                     } else {
                         sender.sendMessage(ChatColor.GREEN + "Warp gelöscht!");
-                        Main.getPlugin().getLogger().info("Warp " + args[0] + " was deleted by " + sender.getName() + "!");
+                        Main.getPlugin().getLogger().info("Warp " + args[0] + " was deleted in world " + ((Player) sender).getWorld().getName() + " by " + sender.getName() + "!");
                     }
                 } else {
                     sender.sendMessage(ChatColor.RED + "Bitte gebe einen Warp an!");
@@ -219,43 +216,19 @@ public class Commands {
             @Override
             public void onCommand(String[] strings, CommandSender sender) {
                 StringBuilder builder = new StringBuilder(ChatColor.DARK_GREEN + "Alle Warps:");
-                for (String warp : Main.getWarps().keySet()) {
-                    builder.append("\n§6 - ").append(warp);
+                for (Warp warp : Warp.warps) {
+                    builder.append("\n§6 - ").append(warp.getName());
                 }
                 sender.sendMessage(builder.toString());
             }
         };
 
-        List<MenuChild> children = new ArrayList<>();
-        for (String w : Main.getWarps().keySet()) {
-            children.add(new MenuButton(Main.getIcon(w), w) {
-                Location loc = Main.getWarp(w);
-
-                @Override
-                public void onClick(Player p, MenuSession session) {
-                    BukkitRunnable runnable = new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            p.teleport(loc);
-                            p.sendMessage("§aDu wurdest teleportiert!");
-                            Main.getPlugin().getLogger().info("The Player " + p.getName() + " was teleported to warp " + w + "!");
-                        }
-                    };
-                    runnable.runTaskLater(Main.getPlugin(), 1);
-
-                }
-            });
-        }
-        Main.getPlugin().getLogger().warning("Added " + children.size() + " warps to menu!");
-        warpMenu = new ScrollableMenu(children, 45 - 9);
-
-        warpMenu.rearrange();
         new Command(handler, "warp", "Teleportiert dich zu dem angegebenen Warp", new Permission("toolbox.warp"), true) {
             @Override
             public void onCommand(String[] args, CommandSender sender) {
                 Player p = (Player) sender;
                 if (args.length == 1) {
-                    Location warp = Main.getWarp(args[0]);
+                    Location warp = Warp.getWarpPoint(args[0], p.getWorld());
                     if (warp == null) {
                         p.sendMessage("§cWarp nicht gefunden! Gebe §6/listWarps§c für eine Liste ein!");
                         return;
@@ -265,24 +238,17 @@ public class Commands {
                     Main.getPlugin().getLogger().info("The Player " + p.getName() + " was teleported to warp " + args[0] + "!");
                 } else {
                     //p.sendMessage("§cDu musst einen Warp angeben: /warp <WarpName>");
-                    new MenuSession(warpMenu, p, 45, "§6Warps");
+                    //new MenuSession(warpMenu, p, 45, "§6Warps");
+                    Warp.openMenu(p);
                 }
             }
         };
 
         new Command(handler, "spawn", "Teleportiert dich zum Spawn", new Permission("toolbox.spawn"), true) {
-
             @Override
             public void onCommand(String[] args, CommandSender sender) {
                 Player p = (Player) sender;
-                Location warp = Main.getWarp("spawn");
-                if (warp == null) {
-                    p.sendMessage("§cSpawn nicht definiert! Frag einen Administrator ob er einen Warp namens 'spawn' erstellt!");
-                    return;
-                }
-                p.teleport(warp);
-                p.sendMessage("§aDu wurdest teleportiert!");
-                Main.getPlugin().getLogger().info("The Player " + p.getName() + " was teleported to warp " + "spawn" + "!");
+                p.performCommand("warp spawn");
             }
         };
 

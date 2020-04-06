@@ -27,12 +27,21 @@ public class Main extends AdvancedPlugin {
 
     private static AdvancedPlugin plugin;
     private static List<Player> afkList = new ArrayList<>();
-    private static Map<Player, Long> lastAction = new HashMap<>();
+    static Map<Player, Long> lastAction = new HashMap<>();
+    private static Map<Player, Long> manuelAfk = new HashMap<>();
     private static long timeout = 600000; //= 10 minutes.
     private static BukkitRunnable afkChecker;
     private static boolean kickAfk = true;
     private static Configuration warpConfig;
+    /**
+     * @deprecated Use the <code>Warp</code>-Class instead.
+     **/
+    @Deprecated
     private static Map<String, Location> warps = new HashMap<>();
+    /**
+     * @deprecated Use the <code>Warp</code>-Class instead.
+     **/
+    @Deprecated
     private static Map<String, ItemStack> icon = new HashMap<>();
 
     public static AdvancedPlugin getPlugin() {
@@ -50,18 +59,28 @@ public class Main extends AdvancedPlugin {
     }
 
     public static void setAfk(Player p, boolean state) {
-        if (afkList.contains(p)) {
+        if (afkList.contains(p) || manuelAfk.containsKey(p)) {
             if (state) return;
+            if (manuelAfk.containsKey(p) && ((System.currentTimeMillis() - lastAction.get(p)) > (System.currentTimeMillis() - manuelAfk.get(p))))
+                return;
             afkList.remove(p);
+            manuelAfk.remove(p);
             Bukkit.broadcastMessage("§6" + p.getName() + "§e ist nun nicht mehr afk!");
         } else {
             if (!state) return;
+            if (!shallPlayerAfk(p)) {
+                if (!manuelAfk.containsKey(p)) {
+                    manuelAfk.put(p, System.currentTimeMillis());
+                    Bukkit.broadcastMessage("§6" + p.getName() + "§e ist nun afk!");
+                }
+                return;
+            }
             afkList.add(p);
             if (!kickAfk || p.hasPermission("toolbox.afkKickProtection"))
                 Bukkit.broadcastMessage("§6" + p.getName() + "§e ist nun afk!");
             else {
                 getPlugin().getLogger().warning("Kicking " + p.getName() + " because of inactivity!");
-                p.kickPlayer("§cDu warst zu lange abwesend!");
+                p.kickPlayer("§cDu wurdest wegen zu langer Inaktivität gekickt!");
             }
         }
     }
@@ -70,6 +89,10 @@ public class Main extends AdvancedPlugin {
         return afkList.contains(p);
     }
 
+    /**
+     * @deprecated Use the <code>Warp</code>-Class instead.
+     **/
+    @Deprecated
     private static void reloadWarps() {
         warps.clear();
         for (String key : warpConfig.getKeys(false)) {
@@ -107,6 +130,10 @@ public class Main extends AdvancedPlugin {
         }
     }
 
+    /**
+     * @deprecated Use the <code>Warp</code>-Class instead.
+     **/
+    @Deprecated
     private static void saveWarps() {
         for (String warp : warps.keySet()) {
             Location loc = warps.get(warp);
@@ -129,6 +156,10 @@ public class Main extends AdvancedPlugin {
         warpConfig.save();
     }
 
+    /**
+     * @deprecated Use the <code>Warp</code>-Class instead.
+     **/
+    @Deprecated
     public static boolean addWarp(String warp, Location loc) {
         if (warps.containsKey(warp)) return false;
         warps.put(warp, loc);
@@ -136,6 +167,10 @@ public class Main extends AdvancedPlugin {
         return true;
     }
 
+    /**
+     * @deprecated Use the <code>Warp</code>-Class instead.
+     **/
+    @Deprecated
     static boolean removeWarp(String warp) {
         if (!warps.containsKey(warp)) return false;
         warps.remove(warp);
@@ -144,14 +179,26 @@ public class Main extends AdvancedPlugin {
         return true;
     }
 
+    /**
+     * @deprecated Use the <code>Warp</code>-Class instead.
+     **/
+    @Deprecated
     public static Map<String, Location> getWarps() {
         return warps;
     }
 
+    /**
+     * @deprecated Use the <code>Warp</code>-Class instead.
+     **/
+    @Deprecated
     public static Location getWarp(String warp) {
         return warps.getOrDefault(warp, null);
     }
 
+    /**
+     * @deprecated Use the <code>Warp</code>-Class instead.
+     **/
+    @Deprecated
     public static ItemStack getIcon(String warp) {
         ItemStack stack = null;
         if (icon.containsKey(warp))
@@ -165,7 +212,7 @@ public class Main extends AdvancedPlugin {
     @Override
     public void onEnable() {
         super.onEnable();
-        getLogger().severe("Toolbox by Blaumeise03 | www.blaumeise03.de | github.com/Blaumeise03");
+        //getLogger().severe("Toolbox by Blaumeise03 | www.blaumeise03.de | github.com/Blaumeise03");
         plugin = this;
         getLogger().info("Registering events...");
         registerEvent(new Listeners());
@@ -174,7 +221,7 @@ public class Main extends AdvancedPlugin {
         afkChecker = new BukkitRunnable() {
             @Override
             public void run() {
-                for (Player p : lastAction.keySet()) {
+                for (Player p : Bukkit.getOnlinePlayers()) {
                     if (p.isOnline())
                         setAfk(p, shallPlayerAfk(p));
                 }
@@ -188,7 +235,8 @@ public class Main extends AdvancedPlugin {
         } catch (ConfigurationNotFoundException e) {
             e.printStackTrace();
         }
-        reloadWarps();
+        Warp.warpConfig = warpConfig;
+        Warp.reloadWarps();
         getLogger().info("Adding commands...");
         Commands.setUp();
     }
@@ -196,9 +244,9 @@ public class Main extends AdvancedPlugin {
     @Override
     public void onDisable() {
         super.onDisable();
-        getLogger().severe("Toolbox by Blaumeise03 | www.blaumeise03.de | github.com/Blaumeise03");
+        //getLogger().severe("Toolbox by Blaumeise03 | www.blaumeise03.de | github.com/Blaumeise03");
         afkChecker.cancel();
-        getLogger().info("Saving warps...");
+        //getLogger().info("Saving warps...");
         //saveWarps();
     }
 }

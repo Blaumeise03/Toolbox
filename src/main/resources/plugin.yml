@@ -80,7 +80,7 @@ commands:
   gm:
     description: Change you gamemode.
     permission: toolbox.gameMode
-  akf:
+  afk:
     description: Sets you into the afk-mode.
     permission: toolbox.afk
   setWarp:
