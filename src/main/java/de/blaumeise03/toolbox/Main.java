@@ -8,16 +8,15 @@ import de.blaumeise03.spigotUtils.AdvancedPlugin;
 import de.blaumeise03.spigotUtils.Configuration;
 import de.blaumeise03.spigotUtils.exceptions.ConfigurationNotFoundException;
 import de.blaumeise03.toolbox.menu.MenuListener;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 
 /**
@@ -26,10 +25,11 @@ import java.util.*;
 public class Main extends AdvancedPlugin {
 
     private static AdvancedPlugin plugin;
-    private static List<Player> afkList = new ArrayList<>();
     static Map<Player, Long> lastAction = new HashMap<>();
-    private static Map<Player, Long> manuelAfk = new HashMap<>();
+    private static final String afkMessage = "§eDer Spieler [§6%s§e] ist nun §c%s§eAfk!";
+    static Map<Player, Long> manuelAfkList = new HashMap<>();
     private static long timeout = 600000; //= 10 minutes.
+    static Map<Player, AfkMode> afkList = new HashMap<>();
     private static BukkitRunnable afkChecker;
     private static boolean kickAfk = true;
     private static Configuration warpConfig;
@@ -52,42 +52,60 @@ public class Main extends AdvancedPlugin {
         lastAction.put(p, System.currentTimeMillis());
     }
 
-    public static boolean shallPlayerAfk(Player p) {
-        long lastActionTime = lastAction.getOrDefault(p, (long) -1);
-        long timeSinceLastAction = lastActionTime != -1 ? System.currentTimeMillis() - lastActionTime : -1;
-        return timeSinceLastAction >= timeout;
+    public static void setManuelAfk(Player p) {
+        AfkMode cMode = afkList.getOrDefault(p, AfkMode.NONE);
+        if (cMode.priority > 0) {
+            p.sendMessage("§cDu bist bereits als Afk markiert.");
+            return;
+        }
+        manuelAfkList.put(p, System.currentTimeMillis());
+        afkList.put(p, AfkMode.MANUEL_AFK);
+        Bukkit.broadcastMessage(String.format(afkMessage, p.getDisplayName(), ""));
     }
 
-    public static void setAfk(Player p, boolean state) {
-        if (afkList.contains(p) || manuelAfk.containsKey(p)) {
-            if (state) return;
-            if (manuelAfk.containsKey(p) && ((System.currentTimeMillis() - lastAction.get(p)) > (System.currentTimeMillis() - manuelAfk.get(p))))
-                return;
-            afkList.remove(p);
-            manuelAfk.remove(p);
-            Bukkit.broadcastMessage("§6" + p.getName() + "§e ist nun nicht mehr afk!");
-        } else {
-            if (!state) return;
-            if (!shallPlayerAfk(p)) {
-                if (!manuelAfk.containsKey(p)) {
-                    manuelAfk.put(p, System.currentTimeMillis());
-                    Bukkit.broadcastMessage("§6" + p.getName() + "§e ist nun afk!");
+    public static void updateAfk(Player p) {
+        AfkMode cMode = afkList.getOrDefault(p, AfkMode.NONE);
+        long timeSinceLastAction = System.currentTimeMillis() - lastAction.getOrDefault(p, 0L);
+        //Check if player should get kicked:
+        if (timeSinceLastAction > timeout) {
+            //Player should be kicked
+            if (cMode != AfkMode.FINAL_AFK) {
+                afkList.put(p, AfkMode.FINAL_AFK);
+            }
+            if (cMode.priority <= 0) {
+                Bukkit.broadcastMessage(String.format(afkMessage, p.getDisplayName(), ""));
+            }
+            if (!p.hasPermission("toolbox.afkKickProtection")) {
+                plugin.getLogger().info("Player " + p.getDisplayName() + " was kicked because auf inactivity.");
+                p.kickPlayer(ChatColor.RED + "Du wurdest wegen zu langer Inaktivität gekickt!");
+            }
+            return;
+        }
+        //Check if player should get marked as afk
+        if (timeSinceLastAction > timeout / 2) {
+            //Player should be marked as afk
+            if (cMode != AfkMode.PRE_AFK) {
+                afkList.put(p, AfkMode.PRE_AFK);
+                if (cMode.priority <= 0) {
+                    Bukkit.broadcastMessage(String.format(afkMessage, p.getDisplayName(), ""));
                 }
-                return;
             }
-            afkList.add(p);
-            if (!kickAfk || p.hasPermission("toolbox.afkKickProtection"))
-                Bukkit.broadcastMessage("§6" + p.getName() + "§e ist nun afk!");
-            else {
-                getPlugin().getLogger().warning("Kicking " + p.getName() + " because of inactivity!");
-                p.kickPlayer("§cDu wurdest wegen zu langer Inaktivität gekickt!");
+            return;
+        }
+
+        //Check if player has moved
+        if (timeSinceLastAction < timeout / 2 && cMode.priority > 0) {
+            if (cMode == AfkMode.MANUEL_AFK) {
+                long timeSinceManuellAfk = System.currentTimeMillis() - manuelAfkList.getOrDefault(p, 0L);
+                if (timeSinceLastAction > timeSinceManuellAfk) {
+                    return;
+                }
             }
+            afkList.put(p, AfkMode.NONE);
+            Bukkit.broadcastMessage(String.format(afkMessage, p.getDisplayName(), "nicht mehr "));
         }
     }
 
-    public static boolean isAfk(Player p) {
-        return afkList.contains(p);
-    }
 
     /**
      * @deprecated Use the <code>Warp</code>-Class instead.
@@ -222,8 +240,7 @@ public class Main extends AdvancedPlugin {
             @Override
             public void run() {
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    if (p.isOnline())
-                        setAfk(p, shallPlayerAfk(p));
+                    updateAfk(p);
                 }
             }
         };

@@ -174,9 +174,7 @@ public class Commands {
         new Command(handler, "afk", "Setzt dich in den afk-modus", true, true) {
             @Override
             public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
-                Main.setAfk((Player) sender, true);
-                sender.sendMessage("§aDu wurdest, wenn du es nicht bereits bist, in den afk-Modus gesetzt!");
-                //Main.lastAction.put((Player) sender,0L);
+                Main.setManuelAfk((Player) sender);
             }
         };
 

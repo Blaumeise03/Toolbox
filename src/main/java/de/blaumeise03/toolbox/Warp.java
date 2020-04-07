@@ -87,11 +87,11 @@ public class Warp extends HashMap<World, Location> {
                     Main.getPlugin().getLogger().severe("Error while loading warps: World with UUID " + worldUUIDS + " was not found!");
                     continue;
                 }
-                long x = warpConfig.getLong(warpID + ".locations." + worldUUIDS + ".X");
-                long y = warpConfig.getLong(warpID + ".locations." + worldUUIDS + ".Y");
-                long z = warpConfig.getLong(warpID + ".locations." + worldUUIDS + ".Z");
-                long yaw = warpConfig.getLong(warpID + ".locations." + worldUUIDS + ".Yaw");
-                long pitch = warpConfig.getLong(warpID + ".locations." + worldUUIDS + ".Pitch");
+                double x = warpConfig.getDouble(warpID + ".locations." + worldUUIDS + ".X");
+                double y = warpConfig.getDouble(warpID + ".locations." + worldUUIDS + ".Y");
+                double z = warpConfig.getDouble(warpID + ".locations." + worldUUIDS + ".Z");
+                float yaw = (float) warpConfig.getDouble(warpID + ".locations." + worldUUIDS + ".Yaw");
+                float pitch = (float) warpConfig.getDouble(warpID + ".locations." + worldUUIDS + ".Pitch");
                 Location loc = new Location(world, x, y, z, yaw, pitch);
                 warp.put(world, loc);
             }
