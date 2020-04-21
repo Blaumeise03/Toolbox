@@ -2,7 +2,7 @@ name: Toolbox
 version: 1.1-SNAPSHOT
 main: de.blaumeise03.toolbox.Main
 description: Provides a lot of basic commands.
-api-version: 1.13
+api-version: 1.15
 author: Blaumeise03
 website: http://blaumeise03.de/
 depend: [BlueUtils]

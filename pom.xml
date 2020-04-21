@@ -23,11 +23,11 @@
             <id>bungeecord-repo</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </repository>
-        <repository>
+        <!--repository>
             <id>blaumeise03-ftp</id>
             <name>Blaumeise03</name>
             <url>http://blaumeise03.de/maven2</url>
-        </repository>
+        </repository-->
     </repositories>
     <dependencies>
         <!--Spigot API-->
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.14.4-R0.1-SNAPSHOT</version>
+            <version>1.15.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!--Bukkit API-->
@@ -50,12 +50,12 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>craftbukkit</artifactId>
-            <version>1.14.4-R0.1-SNAPSHOT</version>
+            <version>1.15.2-R0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.blaumeise03</groupId>
             <artifactId>BlueUtils</artifactId>
-            <version>3.1-SNAPSHOT</version>
+            <version>4.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>
@@ -67,14 +67,8 @@
                 <filtering>true</filtering>
                 <includes>
                     <include>plugin.yml</include>
+                    <include>warp.yml</include>
                 </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <excludes>
-                    <exclude>plugin.yml</exclude>
-                </excludes>
             </resource>
         </resources>
         <plugins>

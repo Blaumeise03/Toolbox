@@ -4,8 +4,9 @@
 
 package de.blaumeise03.toolbox;
 
-import de.blaumeise03.blueUtils.Command;
-import de.blaumeise03.blueUtils.CommandHandler;
+import de.blaumeise03.blueUtils.command.Command;
+import de.blaumeise03.blueUtils.command.CommandHandler;
+import de.blaumeise03.blueUtils.exceptions.CommandNotFoundException;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -17,6 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.permissions.Permission;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -29,9 +31,20 @@ public class Commands {
     public static void setUp() {
         CommandHandler handler = Main.getPlugin().getHandler();
 
-        new Command(handler, "repair", "Repariert das Item in deiner Hand", true, true) {
+        Command repairCmd = new Command("repair", true, true, new Permission("toolbox.repair")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 Player p = (Player) sender;
                 if (p.getInventory().getItemInMainHand().getType() == Material.AIR) {
                     sender.sendMessage("§cDu musst ein Item in deine Hand halten!");
@@ -52,14 +65,30 @@ public class Commands {
                 }
             }
         };
+        try {
+            handler.addCommand(repairCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "speed", "Ändere deine Geschwindigkeit", true, true) {
+        Command speedCmd = new Command("speed", true, true, new Permission("toolbox.speed")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 Player p = (Player) sender;
                 if (args.length == 1) {
                     float speed;
-                    p.sendMessage("§aDeine alte Laufgeschwindigkeit: " + p.getWalkSpeed() + ". Deine alte Flieggeschwindigkeit: " + p.getFlySpeed() + ".");
+                    p.sendMessage("§aDeine alte Laufgeschwindigkeit: " + p.getWalkSpeed() + ". Deine alte Fluggeschwindigkeit: " + p.getFlySpeed() + ".");
                     try {
                         speed = Float.parseFloat(args[0]);
                         if (speed < -1 || speed > 1) {
@@ -80,28 +109,63 @@ public class Commands {
                 }
             }
         };
+        try {
+            handler.addCommand(speedCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "fly", "Schalte zwischen fliegen und laufen um.", true, true) {
+        Command flyCmd = new Command("fly", true, true, new Permission("toolbox.fly")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 if (args.length > 0) {
                     if (args[0].equalsIgnoreCase("get")) {
-                        CommandSender s = realSender;
-                        if (!isThirdExecution) s = sender;
+                        CommandSender s = originalSender;
+                        if (!isThird) s = sender;
                         s.sendMessage("§aFly: " + ((Player) sender).getAllowFlight());
                         return;
                     }
                 }
                 Player p = (Player) sender;
                 p.setAllowFlight(!p.getAllowFlight());
+                if (isThird) {
+                    originalSender.sendMessage("§a" + sender.getName() + " " + (p.getAllowFlight() ? "§2kann nun" : "kann§c nicht mehr") + "§a fliegen!");
+                }
                 sender.sendMessage("§aDu " + (p.getAllowFlight() ? "§2kannst nun" : "kannst nun§c nicht") + "§a fliegen!");
                 Main.getPlugin().getLogger().info("Player " + p.getDisplayName() + " has fly: " + p.getAllowFlight());
             }
         };
+        try {
+            handler.addCommand(flyCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "broadcast", "Überträgt die Nachricht 1 zu 1 an alle Spieler. (Farbcodes werden unterstützt)", true, true) {
+        Command broadcastCmd = new Command("broadcast", true, false, new Permission("toolbox.broadcast")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 StringBuilder builder = new StringBuilder();
                 for (String arg : args) {
                     builder.append(convertColor(arg)).append(" ");
@@ -110,10 +174,26 @@ public class Commands {
                 sender.sendMessage(ChatColor.GREEN + "Nachricht gesendet!");
             }
         };
+        try {
+            handler.addCommand(broadcastCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "god", "Setzt oder entfernt dich vom GodMode.", true, true) {
+        Command godCmd = new Command("god", true, true, new Permission("toolbox.godMode")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 Player p = (Player) sender;
                 Set<String> tags = p.getScoreboardTags();
                 boolean isGod = false;
@@ -124,8 +204,8 @@ public class Commands {
                     }
                 if (args.length > 0) {
                     if (args[0].equalsIgnoreCase("get")) {
-                        if (!isThirdExecution) realSender = sender;
-                        realSender.sendMessage("§aGodMode: " + isGod);
+                        if (!isThird) originalSender = sender;
+                        originalSender.sendMessage("§aGodMode von §2" + sender.getName() + "§a: " + isGod);
                         return;
                     }
                 }
@@ -142,12 +222,31 @@ public class Commands {
                     p.sendMessage("§aGodMode§c entfernt§a!");
                     Main.getPlugin().getLogger().info("Removed GODMODE for " + p.getDisplayName());
                 }
+                if (isThird) {
+                    originalSender.sendMessage("§aGodMode of Player §b" + sender.getName() + "§a: §2" + !isGod);
+                }
             }
         };
+        try {
+            handler.addCommand(godCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "gm", "Ändere deinen Spielmodus.", true, false) {
+        Command gmCmd = new Command("gm", true, false, new Permission("toolbox.gameMode")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 if (args.length == 1) {
                     Player p = (Player) sender;
                     GameMode mode;
@@ -172,26 +271,41 @@ public class Commands {
                         case "3":
                         case "a":
                         case "adv":
-                        case "adve":
                         case "adventure":
                             mode = GameMode.ADVENTURE;
                             break;
                         default:
-                            p.sendMessage("§cUnbekannter modus! Erlaubte: \n§a 0, 1, 2, 3, 4; s, c, spec, adv, creative, spectator, adventure");
+                            p.sendMessage("§cUnbekannter Modus! Erlaubte: \n§a 0, 1, 2, 3; s, c, spec, adv, survival, creative, spectator, adventure");
                             return;
                     }
                     p.setGameMode(mode);
-                    Main.getPlugin().getLogger().warning("Player " + p.getName() + " has changed his gamemode to " + mode.name());
+                    Main.getPlugin().getLogger().info("Player " + p.getName() + " has changed his gamemode to " + mode.name());
                     p.sendMessage("§aDu bist nun im GameMode §6" + mode.name());
                 } else {
                     sender.sendMessage("§cDu musst den gewünschten Spielmodus angeben!");
                 }
             }
         };
+        try {
+            handler.addCommand(gmCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "afk", "Setzt dich in den afk-modus", true, true) {
+        Command afkCmd = new Command("afk", true, true, new Permission("toolbox.afk")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 if (args.length > 0) {
                     if (args[0].equalsIgnoreCase("list")) {
                         StringBuilder builder = new StringBuilder("§aAlle Spieler die AFK sind:");
@@ -212,10 +326,26 @@ public class Commands {
                 }
             }
         };
+        try {
+            handler.addCommand(afkCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "setWarp", "Setzt an deiner Position einen neuen Warp.", true, true) {
+        Command setWarpCmd = new Command("setWarp", true, false, new Permission("toolbox.warpAdmin")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 if (args.length != 1) {
                     sender.sendMessage("§cDu musst einen Namen angeben: §6/setWarp <WarpName>");
                     return;
@@ -226,10 +356,27 @@ public class Commands {
                     Main.getPlugin().getLogger().info("Warp " + args[0] + " was created by " + sender.getName() + "!");
             }
         };
+        try {
+            handler.addCommand(setWarpCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "deleteWarp", "Löscht einen Warp", true, true) {
+
+        Command deleteWarpCmd = new Command("deleteWarp", false, false, new Permission("toolbox.warpAdmin")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 if (args.length == 1) {
                     boolean success = Warp.deleteWorldLocation(((Player) sender).getWorld(), args[0]);
                     if (!success) {
@@ -243,10 +390,26 @@ public class Commands {
                 }
             }
         };
+        try {
+            handler.addCommand(deleteWarpCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "listWarps", "Listet alle Warps auf.", true, true) {
+        Command listWarpCmd = new Command("listWarps", false, false, new Permission("toolbox.warp")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 StringBuilder builder = new StringBuilder(ChatColor.DARK_GREEN + "Alle Warps:");
                 for (Warp warp : Warp.warps) {
                     builder.append("\n§6 - ").append(warp.getName());
@@ -254,10 +417,27 @@ public class Commands {
                 sender.sendMessage(builder.toString());
             }
         };
+        try {
+            handler.addCommand(listWarpCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "warp", "Teleportiert dich zu dem angegebenen Warp", true, true) {
+        Command warpCmd = new Command("warp", true, true, new Permission("toolbox.warp")) {
+
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 Player p = (Player) sender;
                 if (args.length == 1) {
                     Location warp = Warp.getWarpPoint(args[0], p.getWorld());
@@ -267,6 +447,9 @@ public class Commands {
                     }
                     p.teleport(warp);
                     p.sendMessage("§aDu wurdest teleportiert!");
+                    if (isThird) {
+                        originalSender.sendMessage("§2" + sender.getName() + "§a wurde erfolgreich teleportiert!");
+                    }
                     Main.getPlugin().getLogger().info("The Player " + p.getName() + " was teleported to warp " + args[0] + "!");
                 } else {
                     //p.sendMessage("§cDu musst einen Warp angeben: /warp <WarpName>");
@@ -275,18 +458,50 @@ public class Commands {
                 }
             }
         };
+        try {
+            handler.addCommand(warpCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "spawn", "Teleportiert dich zum Spawn", true, true) {
+        Command spawnCmd = new Command("spawn", true, true, new Permission("toolbox.spawn")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 Player p = (Player) sender;
                 p.performCommand("warp spawn");
             }
         };
+        try {
+            handler.addCommand(spawnCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
 
-        new Command(handler, "spawnMob", "Spawnt ein oder mehrere Mobs", true, true) {
+        Command spawnMobCmd = new Command("spawnMob", true, true, new Permission("toolbox.spawnMobs")) {
+            /**
+             * This method is called when a player executes this command
+             *
+             * @param sender         the {@link CommandSender} who executes the command
+             * @param args           the arguments passed to the command
+             * @param isPlayer       if the <code>sender</code> is a {@link Player Player}
+             * @param isThird        if the command was executed by the <code>originalSender</code> for another player
+             *                       e.g: /command player args.. - the command, if {@link Command#isThirdExecutable()} is true,
+             *                       gets executed at the 'player' passed as first argument
+             * @param originalSender The original sender, equals <code>sender</code> if command was not third-executed
+             */
             @Override
-            public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+            public void execute(CommandSender sender, String[] args, boolean isPlayer, boolean isThird, CommandSender originalSender) {
                 Player p = (Player) sender;
                 if (args.length == 0) {
                     p.sendMessage("§cZu wenige Argumente! Nutze §6/spawnMob <Mob> [Anzahl]");
@@ -355,6 +570,11 @@ public class Commands {
                 p.sendMessage("§aEs wurden §6" + amount + "§a Entitäten vom Typ §6" + type.name() + "§a gespawnt!");
             }
         };
+        try {
+            handler.addCommand(spawnMobCmd);
+        } catch (CommandNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     private static String convertColor(String string) {
