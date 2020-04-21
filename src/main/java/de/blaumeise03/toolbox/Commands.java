@@ -4,8 +4,8 @@
 
 package de.blaumeise03.toolbox;
 
-import de.blaumeise03.spigotUtils.Command;
-import de.blaumeise03.spigotUtils.CommandHandler;
+import de.blaumeise03.blueUtils.Command;
+import de.blaumeise03.blueUtils.CommandHandler;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -84,9 +84,18 @@ public class Commands {
         new Command(handler, "fly", "Schalte zwischen fliegen und laufen um.", true, true) {
             @Override
             public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
+                if (args.length > 0) {
+                    if (args[0].equalsIgnoreCase("get")) {
+                        CommandSender s = realSender;
+                        if (!isThirdExecution) s = sender;
+                        s.sendMessage("§aFly: " + ((Player) sender).getAllowFlight());
+                        return;
+                    }
+                }
                 Player p = (Player) sender;
                 p.setAllowFlight(!p.getAllowFlight());
                 sender.sendMessage("§aDu " + (p.getAllowFlight() ? "§2kannst nun" : "kannst nun§c nicht") + "§a fliegen!");
+                Main.getPlugin().getLogger().info("Player " + p.getDisplayName() + " has fly: " + p.getAllowFlight());
             }
         };
 
@@ -113,21 +122,30 @@ public class Commands {
                         isGod = true;
                         break;
                     }
+                if (args.length > 0) {
+                    if (args[0].equalsIgnoreCase("get")) {
+                        if (!isThirdExecution) realSender = sender;
+                        realSender.sendMessage("§aGodMode: " + isGod);
+                        return;
+                    }
+                }
                 if (!isGod) {
                     p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 999999, 5, false, false, false));
                     p.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 999999, 5, false, false, false));
                     p.addScoreboardTag("godMode");
                     p.sendMessage("§aDu bist nun im §6GodMode§a!");
+                    Main.getPlugin().getLogger().info("Player " + p.getDisplayName() + " has now GODMODE");
                 } else {
                     p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
                     p.removePotionEffect(PotionEffectType.SATURATION);
                     p.removeScoreboardTag("godMode");
                     p.sendMessage("§aGodMode§c entfernt§a!");
+                    Main.getPlugin().getLogger().info("Removed GODMODE for " + p.getDisplayName());
                 }
             }
         };
 
-        new Command(handler, "gm", "Ändere deinen Spielmodus.", true, true) {
+        new Command(handler, "gm", "Ändere deinen Spielmodus.", true, false) {
             @Override
             public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
                 if (args.length == 1) {
@@ -174,7 +192,24 @@ public class Commands {
         new Command(handler, "afk", "Setzt dich in den afk-modus", true, true) {
             @Override
             public void onCommand(String[] args, CommandSender sender, boolean isPlayer, boolean isThirdExecution, CommandSender realSender) {
-                Main.setManuelAfk((Player) sender);
+                if (args.length > 0) {
+                    if (args[0].equalsIgnoreCase("list")) {
+                        StringBuilder builder = new StringBuilder("§aAlle Spieler die AFK sind:");
+                        for (Player p : ((Player) sender).getWorld().getPlayers()) {
+                            if (Main.afkList.containsKey(p)) {
+                                AfkMode mode = Main.afkList.get(p);
+                                if (mode.getPriority() > 0) {
+                                    builder.append("\n§2").append(p.getDisplayName()).append("§4: §a").append(mode.name());
+                                }
+                            }
+                        }
+                        sender.sendMessage(builder.toString());
+                    } else {
+                        sender.sendMessage("§cGebe /afk oder /afk list ein.");
+                    }
+                } else {
+                    Main.setManuelAfk((Player) sender);
+                }
             }
         };
 

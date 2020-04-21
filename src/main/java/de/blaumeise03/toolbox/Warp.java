@@ -4,7 +4,7 @@
 
 package de.blaumeise03.toolbox;
 
-import de.blaumeise03.spigotUtils.Configuration;
+import de.blaumeise03.blueUtils.Configuration;
 import de.blaumeise03.toolbox.menu.*;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
@@ -19,8 +19,8 @@ public class Warp extends HashMap<World, Location> {
     static List<Warp> warps = new ArrayList<>();
     static Map<World, Menu> menus = new HashMap<>();
     static Configuration warpConfig;
-    private String name;
-    private ItemStack icon;
+    private final String name;
+    private final ItemStack icon;
 
     public Warp(String name, ItemStack icon) {
         this.name = name;
@@ -61,6 +61,7 @@ public class Warp extends HashMap<World, Location> {
         Main.getPlugin().getLogger().info("Loading Warp-config...");
         warps.clear();
         warpConfig.reload();
+        menus.clear();
         for (String warpID : warpConfig.getKeys(false)) {
             String iconName = warpConfig.getString(warpID + ".Icon");
             if (iconName == null) {
@@ -105,7 +106,7 @@ public class Warp extends HashMap<World, Location> {
                 if (warp.containsKey(world)) {
 
                     children.add(new MenuButton(warp.icon, warp.name) {
-                        Location loc = warp.get(world);
+                        final Location loc = warp.get(world);
 
                         @Override
                         public void onClick(Player p, MenuSession session) {

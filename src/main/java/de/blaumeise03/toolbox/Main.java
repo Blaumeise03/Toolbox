@@ -4,9 +4,9 @@
 
 package de.blaumeise03.toolbox;
 
-import de.blaumeise03.spigotUtils.AdvancedPlugin;
-import de.blaumeise03.spigotUtils.Configuration;
-import de.blaumeise03.spigotUtils.exceptions.ConfigurationNotFoundException;
+import de.blaumeise03.blueUtils.AdvancedPlugin;
+import de.blaumeise03.blueUtils.Configuration;
+import de.blaumeise03.blueUtils.exceptions.ConfigurationNotFoundException;
 import de.blaumeise03.toolbox.menu.MenuListener;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -28,21 +28,21 @@ public class Main extends AdvancedPlugin {
     static Map<Player, Long> lastAction = new HashMap<>();
     private static final String afkMessage = "§eDer Spieler [§6%s§e] ist nun §c%s§eAfk!";
     static Map<Player, Long> manuelAfkList = new HashMap<>();
-    private static long timeout = 600000; //= 10 minutes.
+    private static final long timeout = 600000; //= 10 minutes.
     static Map<Player, AfkMode> afkList = new HashMap<>();
     private static BukkitRunnable afkChecker;
-    private static boolean kickAfk = true;
+    private static final boolean kickAfk = true;
     private static Configuration warpConfig;
     /**
      * @deprecated Use the <code>Warp</code>-Class instead.
      **/
     @Deprecated
-    private static Map<String, Location> warps = new HashMap<>();
+    private static final Map<String, Location> warps = new HashMap<>();
     /**
      * @deprecated Use the <code>Warp</code>-Class instead.
      **/
     @Deprecated
-    private static Map<String, ItemStack> icon = new HashMap<>();
+    private static final Map<String, ItemStack> icon = new HashMap<>();
 
     public static AdvancedPlugin getPlugin() {
         return plugin;
@@ -231,6 +231,7 @@ public class Main extends AdvancedPlugin {
     public void onEnable() {
         super.onEnable();
         //getLogger().severe("Toolbox by Blaumeise03 | www.blaumeise03.de | github.com/Blaumeise03");
+
         plugin = this;
         getLogger().info("Registering events...");
         registerEvent(new Listeners());
@@ -265,5 +266,13 @@ public class Main extends AdvancedPlugin {
         afkChecker.cancel();
         //getLogger().info("Saving warps...");
         //saveWarps();
+    }
+
+    @Override
+    public boolean onReload() {
+        getLogger().warning("Performing config-reload...");
+        warpConfig.reload();
+        Warp.reloadWarps();
+        return true;
     }
 }
