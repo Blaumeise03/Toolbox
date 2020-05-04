@@ -55,7 +55,7 @@
         <dependency>
             <groupId>de.blaumeise03</groupId>
             <artifactId>BlueUtils</artifactId>
-            <version>4.1-SNAPSHOT</version>
+            <version>4.2-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>

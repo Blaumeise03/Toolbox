@@ -30,23 +30,28 @@ public class NightSkipper {
             int playersOnline = world.getPlayers().size();
             int neededPlayers = (int) (playersOnline * 0.5d);
             int sleeping = 0;
+            int afk = 0;
             StringBuilder builder = new StringBuilder("Sleeping-players: ");
             for (Player p : playersInBed) {
                 builder.append(", ").append(p.getName());
                 if (p.getWorld() == world) {
                     builder.append(" W");
-                    if (!Main.afkList.containsKey(p) || Main.afkList.get(p) == AfkMode.NONE || Main.afkList.get(p) == AfkMode.MANUEL_AFK) {
+                    if (Main.afkList.containsKey(p) && Main.afkList.get(p).getPriority() > 1) {
                         builder.append(" NA");
+                        //sleeping++;
+                        afk++;
+                    } else {
                         sleeping++;
                     }
                 }
             }
+            neededPlayers = Math.max(1, neededPlayers);
             if (world.getTime() > 12000) {
                 Main.getPlugin().getLogger().info("[NightSkipper] " + builder.toString());
                 for (Player p : world.getPlayers()) {
                     p.sendMessage("§eEs " + (sleeping > 1 ? "liegen" : "liegt") + "§6 " + sleeping + "§e von §6" + neededPlayers + " Spieler im Bett §2[§c" + playersOnline + " insg.§2]");
                 }
-                if (sleeping >= neededPlayers) {
+                if (sleeping + afk >= neededPlayers && sleeping > 0) {
                     long time = world.getFullTime();
                     time = time - (time % 24000) + 24000;
                     world.setFullTime(time);

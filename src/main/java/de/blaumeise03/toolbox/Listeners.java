@@ -5,18 +5,28 @@
 package de.blaumeise03.toolbox;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.block.data.Openable;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static de.blaumeise03.toolbox.NightSkipper.playersInBed;
 import static de.blaumeise03.toolbox.NightSkipper.trySkip;
 
 public class Listeners implements Listener {
-
+    Map<Player, Long> openDelay = new HashMap<>();
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
@@ -92,6 +102,7 @@ public class Listeners implements Listener {
             }
         }.runTaskLater(Main.getPlugin(), 2);
         Main.afkList.remove(e.getPlayer());
+        openDelay.remove(e.getPlayer());
     }
 
     @EventHandler
@@ -105,6 +116,36 @@ public class Listeners implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent e) {
         Main.playerAction(e.getPlayer());
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK && e.getPlayer().hasPermission("toolbox.openIronDoors") && System.currentTimeMillis() - openDelay.getOrDefault(e.getPlayer(), 0L) > 0 && !e.getPlayer().isSneaking()) {
+            if (e.getClickedBlock() != null &&
+                    (e.getClickedBlock().getType() == Material.IRON_DOOR || e.getClickedBlock().getType() == Material.IRON_TRAPDOOR)) {
+                Openable door = (Openable) e.getClickedBlock().getBlockData();
+                door.setOpen(!door.isOpen());
+                e.getClickedBlock().setBlockData(door);
+                openDelay.put(e.getPlayer(), System.currentTimeMillis() + 150L);
+                e.setUseInteractedBlock(Event.Result.DENY);
+                if (e.getClickedBlock().getType() == Material.IRON_TRAPDOOR) {
+                    if (door.isOpen()) {
+                        e.getClickedBlock().getWorld().playSound(e.getClickedBlock().getLocation(), Sound.BLOCK_IRON_TRAPDOOR_OPEN, 1, 1);
+                    } else {
+                        e.getClickedBlock().getWorld().playSound(e.getClickedBlock().getLocation(), Sound.BLOCK_IRON_TRAPDOOR_CLOSE, 1, 1);
+                    }
+                } else if (e.getClickedBlock().getType() == Material.IRON_DOOR) {
+                    if (door.isOpen()) {
+                        e.getClickedBlock().getWorld().playSound(e.getClickedBlock().getLocation(), Sound.BLOCK_IRON_DOOR_OPEN, 1, 1);
+                    } else {
+                        e.getClickedBlock().getWorld().playSound(e.getClickedBlock().getLocation(), Sound.BLOCK_IRON_DOOR_CLOSE, 1, 1);
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBreak(BlockBreakEvent e) {
+        if (e.getPlayer().getInventory().getItemInMainHand().getType() == Material.DEBUG_STICK && e.getPlayer().isOp()) {
+            e.setCancelled(false);
+        }
     }
 
     @EventHandler

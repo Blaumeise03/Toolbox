@@ -6,6 +6,7 @@ package de.blaumeise03.toolbox;
 
 import de.blaumeise03.blueUtils.command.Command;
 import de.blaumeise03.blueUtils.command.CommandHandler;
+import de.blaumeise03.blueUtils.command.DefaultCompleter;
 import de.blaumeise03.blueUtils.exceptions.CommandNotFoundException;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -22,6 +23,9 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -63,6 +67,14 @@ public class Commands {
                 } else {
                     sender.sendMessage("§cDieses Item hat keine Haltbarkeit!");
                 }
+            }
+
+            @Nullable
+            @Override
+            public List<String> getAdditionalTabArguments(@Nullable String[] args) {
+                if (args == null || args.length > 1)
+                    return null;
+                return DefaultCompleter.getPlayerComplete(args.length == 0 ? null : args[0]);
             }
         };
         try {
@@ -108,6 +120,14 @@ public class Commands {
                     p.sendMessage("§aDeine Geschwindigkeit wurde resettet! Wenn du sie erhöhen willst füge die Geschwindigkeit an: /speed <speed>.");
                 }
             }
+
+            @Nullable
+            @Override
+            public List<String> getAdditionalTabArguments(@Nullable String[] args) {
+                if (args == null || args.length > 1)
+                    return null;
+                return DefaultCompleter.getPlayerComplete(args.length == 0 ? null : args[0]);
+            }
         };
         try {
             handler.addCommand(speedCmd);
@@ -144,6 +164,17 @@ public class Commands {
                 }
                 sender.sendMessage("§aDu " + (p.getAllowFlight() ? "§2kannst nun" : "kannst nun§c nicht") + "§a fliegen!");
                 Main.getPlugin().getLogger().info("Player " + p.getDisplayName() + " has fly: " + p.getAllowFlight());
+            }
+
+            @Nullable
+            @Override
+            public List<String> getAdditionalTabArguments(@Nullable String[] args) {
+                if (args != null && args.length > 1)
+                    return null;
+                List<String> result = DefaultCompleter.getPlayerComplete(args == null || args.length == 0 ? null : args[0]);
+                if (args == null || args.length == 0 || args.length == 1 && "get".startsWith(args[0].toLowerCase()))
+                    result.add("GET");
+                return result;
             }
         };
         try {
@@ -225,6 +256,16 @@ public class Commands {
                 if (isThird) {
                     originalSender.sendMessage("§aGodMode of Player §b" + sender.getName() + "§a: §2" + !isGod);
                 }
+            }
+
+            @Nullable
+            @Override
+            public List<String> getAdditionalTabArguments(@Nullable String[] args) {
+                if (args != null && args.length > 1)
+                    return null;
+                List<String> result = DefaultCompleter.getPlayerComplete(args == null || args.length == 0 ? null : args[0]);
+                if (args == null || args.length == 0 || "get".startsWith(args[0].toLowerCase())) result.add("GET");
+                return result;
             }
         };
         try {
@@ -325,6 +366,17 @@ public class Commands {
                     Main.setManuelAfk((Player) sender);
                 }
             }
+
+            @Nullable
+            @Override
+            public List<String> getAdditionalTabArguments(@Nullable String[] args) {
+                if (args != null && args.length > 1)
+                    return null;
+                List<String> result = DefaultCompleter.getPlayerComplete(args == null || args.length == 0 ? null : args[0]);
+                if (args == null || args.length == 0 || args.length == 1 && "list".startsWith(args[0].toLowerCase()))
+                    result.add("LIST");
+                return result;
+            }
         };
         try {
             handler.addCommand(afkCmd);
@@ -388,6 +440,24 @@ public class Commands {
                 } else {
                     sender.sendMessage(ChatColor.RED + "Bitte gebe einen Warp an!");
                 }
+            }
+
+            @Nullable
+            @Override
+            public List<String> getAdditionalTabArguments(@Nullable String[] args) {
+                if (args != null && args.length > 1)
+                    return null;
+                List<String> result = new ArrayList<>();
+                if (args == null || args.length == 0) {
+                    for (Warp warp : Warp.warps) {
+                        result.add(warp.getName());
+                    }
+                } else {
+                    for (Warp warp : Warp.warps) {
+                        if (warp.getName().toLowerCase().startsWith(args[0].toLowerCase())) result.add(warp.getName());
+                    }
+                }
+                return result;
             }
         };
         try {
@@ -456,6 +526,24 @@ public class Commands {
                     //new MenuSession(warpMenu, p, 45, "§6Warps");
                     Warp.openMenu(p);
                 }
+            }
+
+            @Nullable
+            @Override
+            public List<String> getAdditionalTabArguments(@Nullable String[] args) {
+                if (args != null && args.length > 1)
+                    return null;
+                List<String> result = new ArrayList<>();
+                if (args == null || args.length == 0) {
+                    for (Warp warp : Warp.warps) {
+                        result.add(warp.getName());
+                    }
+                } else {
+                    for (Warp warp : Warp.warps) {
+                        if (warp.getName().toLowerCase().startsWith(args[0].toLowerCase())) result.add(warp.getName());
+                    }
+                }
+                return result;
             }
         };
         try {
@@ -558,16 +646,41 @@ public class Commands {
                 for (int i = 0; i < amount; i++) {
                     Entity entity = loc.getWorld().spawnEntity(loc, type);
                     entity.addScoreboardTag(ran.toString());
-                    Main.getPlugin().getLogger().info("Spawned Entity " + type.name() + " at position "
-                            + loc.getBlockX() + "|"
-                            + loc.getBlockY() + "|"
-                            + loc.getBlockZ() + " with Tag \"" + ran.toString() + "\"! Spawned by " + p.getName() + "!");
                 }
+                Main.getPlugin().getLogger().info("Spawned Entity " + type.name() + " at position "
+                        + loc.getBlockX() + "|"
+                        + loc.getBlockY() + "|"
+                        + loc.getBlockZ() + " with Tag \"" + ran.toString() + "\"! Spawned by " + p.getName() + "!");
                 BaseComponent c1 = new TextComponent("Klicke hier um die Entitäten zu töten! (/kill @e[tag=" + ran.toString() + "]");
                 c1.setColor(net.md_5.bungee.api.ChatColor.DARK_GREEN);
                 c1.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/kill @e[tag=" + ran.toString() + "]"));
                 p.spigot().sendMessage(c1);
                 p.sendMessage("§aEs wurden §6" + amount + "§a Entitäten vom Typ §6" + type.name() + "§a gespawnt!");
+            }
+
+            /**
+             * Method for additional tab-arguments.
+             *
+             * @param args the arguments passed to the command (may contain sub-commands)
+             * @return a list with additional arguments for the command
+             * @implNote Overwrite this method and let it return all arguments which should be suggested e.g. player names
+             */
+            @Nullable
+            @Override
+            public List<String> getAdditionalTabArguments(@Nullable String[] args) {
+                if (args != null && args.length > 1)
+                    return null;
+                List<String> result = new ArrayList<>();
+                if (args == null || args.length == 0) {
+                    for (EntityType type : EntityType.values()) {
+                        result.add(type.name());
+                    }
+                } else {
+                    for (EntityType type : EntityType.values()) {
+                        if (type.name().toLowerCase().startsWith(args[0].toLowerCase())) result.add(type.name());
+                    }
+                }
+                return result;
             }
         };
         try {

@@ -44,6 +44,9 @@ permissions:
   toolbox.spawnMobs:
     description: Permission for spawning entitys
     default: op
+  toolbox.openIronDoors:
+    description: Permission for opening iron doors and trapdoors
+    default: op
   toolbox.*:
     description: Wildcard permission
     default: op
@@ -60,6 +63,7 @@ permissions:
       toolbox.warpAdmin: true
       toolbox.spawnMobs: true
       toolbox.spawn: true
+      toolbox.openIronDoors: true
 
 
 commands:
