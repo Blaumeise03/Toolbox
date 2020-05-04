@@ -1,0 +1,105 @@
+# Toolbox
+Spigot/Paper Plugin with a lot of basic tools.
+
+**REQUIRES BlueUtils**:
+
+https://github.com/Blaumeise03/BlueUtils
+
+commands:
+ - repair:
+   - description: Repairs the item in your main hand.
+   - permission: toolbox.repair
+ - speed:
+   - description: Sets you walk and flyspeed.
+   - permission: toolbox.speed
+ - fly:
+   - description: Toggles your fly
+   - permission: toolbox.fly
+ - broadcast:
+   - description: Broadcast a message.
+   - permission: toolbox.broadcast
+ - god:
+   - description: Sets you into the GodMode.
+   - permission: toolbox.godMode
+ - gm:
+   - description: Change you gamemode.
+   - permission: toolbox.gameMode
+ - afk:
+   - description: Sets you into the afk-mode.
+   - permission: toolbox.afk
+ - setWarp:
+   - description: Sets a warp.
+   - permission: toolbox.warpAdmin
+ - deleteWarp:
+   - description: Deletes a warp.
+   - permission: toolbox.warpAdmin
+ - listWarps:
+   - description: Lists all warps.
+   - permission: toolbox.warp
+ - warp:
+   - description: Teleports you to a warp.
+   - permission: toolbox.warp
+ - spawn:
+   - description: Teleports you to the warp called 'spawn'
+   - permission: toolbox.spawn
+ - spawnMob:
+   - description: Spawns a (or mutliple) Mobs.
+   - permission: toolbox.spawnMobs
+
+ permissions:
+ - toolbox.repair:
+   - description: Permission for repairing items
+   - default: op
+ - toolbox.speed:
+   - description: Permission for changing speed
+   - default: op
+ - toolbox.fly:
+   - description: Permission for toggling fly
+   - default: op
+ - toolbox.broadcast:
+   - description: Permission for broadcasting messages
+   - default: op
+ - toolbox.godMode:
+   - description: Permission for GodMode
+   - default: op
+ - toolbox.afkKickProtection:
+   - description: Prevents the player from afk-kicks
+   - default: op
+ - toolbox.gameMode:
+   - description: Permission for changing the gamemode
+   - default: op
+ - toolbox.afk:
+   - description: Permission for the /afk command
+   - default: op
+ - toolbox.warpAdmin:
+   - description: Permission for changing warps.
+   - default: op
+ - toolbox.warp:
+   - description: Permission for using warps.
+   - default: true
+ - toolbox.spawn:
+   - description: Permission for using /spawn.
+   - default: true
+ - toolbox.spawnMobs:
+   - description: Permission for spawning entitys
+   - default: op
+ - toolbox.openIronDoors:
+   - description: Permission for opening iron doors and trapdoors
+   - default: op
+ - toolbox.*:
+   - description: Wildcard permission
+   - default: op
+   - children:
+     - toolbox.repair: true
+     - toolbox.speed: true
+     - toolbox.fly: true
+     - toolbox.broadcast: true
+     - toolbox.godMode: true
+     - toolbox.afkKickProtection: true
+     - toolbox.gameMode: true
+     - toolbox.afk: true
+     - toolbox.warp: true
+     - toolbox.warpAdmin: true
+     - toolbox.spawnMobs: true
+     - toolbox.spawn: true
+     - toolbox.openIronDoors: true
